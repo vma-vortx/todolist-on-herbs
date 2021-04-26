@@ -1,9 +1,8 @@
-const listControllers = require('./list')
-const itemControllers = require('./item')
+const generateRoutes = require('./generateRoutes')
+const controllersList = require('./_controllerlist')
 
 function controllers(app) {
-    listControllers(app)
-    itemControllers(app)
+    generateRoutes(controllersList, app)
 }
 
 module.exports = controllers

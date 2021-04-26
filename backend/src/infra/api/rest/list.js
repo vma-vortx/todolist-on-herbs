@@ -2,6 +2,7 @@ const defaultController = require('./defaultController')
 
 function listControllers(app) {
 
+
     app.get('/lists', async (req, res, next) => {
         const request = req.query
         const usecase = require('../../../domain/usecases/getLists').getLists()

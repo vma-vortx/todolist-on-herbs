@@ -18,7 +18,7 @@ function req2request(req, useCase) {
     return params
 }
 
-async function defaultController(usecase, req, user, res, next) {
+async function defaultController(usecase, req, user, res, next, controller, methodName) {
     try {
 
         /* Authorization */
@@ -29,16 +29,26 @@ async function defaultController(usecase, req, user, res, next) {
             return res.status(403).json({ message: 'User is not authorized' })
         }
 
+        if (controller.entity && !req.isValid())
+            return res.status(400).json({message: 'Invalid request'}) 
+
         /* Execution */
         const request = req2request(req, usecase)
-        const response = await usecase.run(request)
 
+        if (controller.get && (methodName == 'PUT' || methodName == 'DELETE')) {
+            const getResponse = await controller.get.run(request)
+            if ( !getResponse.isOk)
+                return res.status(404).json({ error: response.err })
+        }
+
+        const response = await usecase.run(request)
+        
         /* Audit */
         // eslint-disable-next-line no-console
         console.info(usecase.auditTrail)
 
         /* Response */
-        if (response.isOk) res.status(200).json(response.ok)
+        if (response.isOk) res.status(successStatusCodeByMethodName(methodName)).json(response.ok)
         else res.status(400).json({ error: response.err })
 
         res.end()
@@ -50,4 +60,17 @@ async function defaultController(usecase, req, user, res, next) {
     }
 }
 
-module.exports = defaultController
+function successStatusCodeByMethodName(methodName) {
+    switch (methodName) {
+        case 'GET':
+            return 201
+        case 'POST':
+            return 201
+        case 'PUT':
+            return 200
+        case 'DELETE':
+            return 200
+    }
+}
+
+module.exports =  defaultController
